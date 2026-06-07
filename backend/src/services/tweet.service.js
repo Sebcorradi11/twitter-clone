@@ -7,6 +7,16 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
+const authorSelect = {
+    select: {
+        id: true,
+        username: true,
+        name: true,
+        bio: true,
+        avatar: true,
+    },
+}
+
 export async function createTweet({ content, authorId, parentId = null, imageUrl = null }) {
     return prisma.tweet.create({
         data: {
@@ -16,7 +26,7 @@ export async function createTweet({ content, authorId, parentId = null, imageUrl
             imageUrl,
         },
         include: {
-            author: true,
+            author: authorSelect,
             _count: { select: { likes: true, replies: true } },
         },
     })
@@ -30,11 +40,11 @@ export async function findTweetById(id) {
     return prisma.tweet.findUnique({
         where: { id },
         include: {
-            author: true,
+            author: authorSelect,
             _count: { select: { likes: true, replies: true } },
             replies: {
                 include: {
-                    author: true,
+                    author: authorSelect,
                     _count: { select: { likes: true, replies: true } },
                 },
                 orderBy: { createdAt: 'asc' },
@@ -44,7 +54,6 @@ export async function findTweetById(id) {
 }
 
 export async function getTimeline({ userId, cursor, limit = 20 }) {
-    // Traer IDs de usuarios que sigo
     const follows = await prisma.follow.findMany({
         where: { followerId: userId },
         select: { followingId: true },
@@ -61,8 +70,11 @@ export async function getTimeline({ userId, cursor, limit = 20 }) {
         take: limit + 1,
         cursor: cursor ? { id: cursor } : undefined,
         include: {
-            author: true,
-            likes: { where: { userId } },
+            author: authorSelect,
+            likes: {
+                where: { userId },
+                select: { userId: true },
+            },
             _count: { select: { likes: true, replies: true } },
         },
         orderBy: { createdAt: 'desc' },

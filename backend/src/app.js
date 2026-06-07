@@ -5,6 +5,8 @@ import { authRoutes } from './routes/auth.routes.js'
 import { tweetRoutes } from './routes/tweet.routes.js'
 import { likeRoutes } from './routes/like.routes.js'
 import { followRoutes } from './routes/follow.routes.js'
+import { searchRoutes } from './routes/search.routes.js'
+import { userRoutes } from './routes/user.routes.js'
 
 export async function buildApp() {
   const app = Fastify({
@@ -26,6 +28,8 @@ export async function buildApp() {
       api.register(tweetRoutes, { prefix: '/tweets' })
       api.register(likeRoutes, { prefix: '/tweets' })
       api.register(followRoutes, { prefix: '/users' })
+      api.register(searchRoutes, { prefix: '/search' })
+      api.register(userRoutes, { prefix: '/users' })
     },
     { prefix: '/api' }
   )
