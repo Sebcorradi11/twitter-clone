@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import { authRoutes } from './routes/auth.routes.js'
+import { tweetRoutes } from './routes/tweet.routes.js'
 
 export async function buildApp() {
   const app = Fastify({
@@ -20,6 +21,7 @@ export async function buildApp() {
   await app.register(
     async (api) => {
       api.register(authRoutes, { prefix: '/auth' })
+      api.register(tweetRoutes, { prefix: '/tweets' })
     },
     { prefix: '/api' }
   )
