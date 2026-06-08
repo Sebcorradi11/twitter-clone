@@ -1,12 +1,18 @@
-import { findUserByUsername, getUserTweets } from '../services/user.service.js'
+import { findUserByUsername, getUserTweets, checkIsFollowing, getUserLikes } from '../services/user.service.js'
 
 export async function getProfile(request, reply) {
     const { username } = request.params
+    const currentUserId = request.user?.userId
 
     const user = await findUserByUsername(username)
 
     if (!user) {
         return reply.code(404).send({ error: 'Usuario no encontrado' })
+    }
+
+    let isFollowing = false
+    if (currentUserId && currentUserId !== user.id) {
+        isFollowing = await checkIsFollowing(currentUserId, user.id)
     }
 
     return reply.send({
@@ -19,6 +25,7 @@ export async function getProfile(request, reply) {
             followersCount: user._count.followers,
             followingCount: user._count.following,
             tweetsCount: user._count.tweets,
+            isFollowing,
         },
     })
 }
@@ -40,4 +47,17 @@ export async function getTweets(request, reply) {
     })
 
     return reply.send(result)
+}
+
+export async function getLikes(request, reply) {
+    const { username } = request.params
+    const currentUserId = request.user?.userId
+
+    const tweets = await getUserLikes({ username, currentUserId })
+
+    if (tweets === null) {
+        return reply.code(404).send({ error: 'Usuario no encontrado' })
+    }
+
+    return reply.send({ tweets })
 }

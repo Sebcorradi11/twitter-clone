@@ -32,6 +32,7 @@ export const getUserTweets = (username, cursor) => api.get(`/users/${username}/t
 export const followUser = (id) => api.post(`/users/${id}/follow`)
 export const getFollowers = (id) => api.get(`/users/${id}/followers`)
 export const getFollowing = (id) => api.get(`/users/${id}/following`)
+export const getUserLikes = (username) => api.get(`/users/${username}/likes`)
 
 // Search
 export const searchUsers = (q) => api.get('/search/users', { params: { q } })

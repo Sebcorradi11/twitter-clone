@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { getProfile, getUserTweets, followUser, updateProfile } from '../services/api'
+import { getProfile, getUserTweets, followUser, updateProfile, getUserLikes } from '../services/api'
 import TweetList from '../components/tweet/TweetList'
 import Avatar from '../components/ui/Avatar'
 import Spinner from '../components/ui/Spinner'
@@ -20,7 +20,12 @@ const CalendarIcon = () => (
 
 /* ── Edit Profile Modal ── */
 function EditModal({ profile, onClose, onSaved }) {
-    const [form, setForm] = useState({ name: profile.name || '', bio: profile.bio || '' })
+    const [form, setForm] = useState({
+        name: profile.name || '',
+        bio: profile.bio || '',
+        avatar: profile.avatar || '',
+        banner: localStorage.getItem(`banner_${profile.id}`) || '',
+    })
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState(null)
 
@@ -29,14 +34,28 @@ function EditModal({ profile, onClose, onSaved }) {
         setSaving(true)
         setError(null)
         try {
-            await updateProfile(form)
-            onSaved(form)
+            await updateProfile({ name: form.name, bio: form.bio, avatar: form.avatar })
+            if (form.banner) {
+                localStorage.setItem(`banner_${profile.id}`, form.banner)
+            } else {
+                localStorage.removeItem(`banner_${profile.id}`)
+            }
+            onSaved({ name: form.name, bio: form.bio, avatar: form.avatar, banner: form.banner })
         } catch (err) {
             setError(err.response?.data?.error || 'Error al guardar')
         } finally {
             setSaving(false)
         }
     }
+
+    const Field = ({ label, children }) => (
+        <div className="relative rounded-md" style={{ border: '1px solid var(--border)' }}>
+            <label className="absolute left-3 top-2 text-xs" style={{ color: 'var(--text2)' }}>
+                {label}
+            </label>
+            {children}
+        </div>
+    )
 
     return (
         <div
@@ -45,11 +64,15 @@ function EditModal({ profile, onClose, onSaved }) {
             onClick={onClose}
         >
             <div
-                className="w-full max-w-[600px] rounded-2xl p-6"
-                style={{ background: 'var(--bg)' }}
+                className="w-full max-w-[600px] rounded-2xl overflow-y-auto"
+                style={{ background: 'var(--bg)', maxHeight: '90vh' }}
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between mb-6">
+                {/* Header */}
+                <div
+                    className="flex items-center justify-between px-4 py-3 sticky top-0 z-10"
+                    style={{ background: 'var(--bg)' }}
+                >
                     <button
                         onClick={onClose}
                         className="p-2 rounded-full transition-colors"
@@ -74,21 +97,79 @@ function EditModal({ profile, onClose, onSaved }) {
                     </button>
                 </div>
 
-                {error && (
-                    <p className="text-red-500 text-sm mb-4">{error}</p>
-                )}
+                <div className="px-4 pb-6 flex flex-col gap-5">
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
 
-                <div className="flex flex-col gap-4">
-                    <div
-                        className="relative rounded-md"
-                        style={{ border: '1px solid var(--border)' }}
-                    >
-                        <label
-                            className="absolute left-3 top-2 text-xs"
-                            style={{ color: 'var(--text2)' }}
+                    {/* Banner preview + URL */}
+                    <div>
+                        <div
+                            className="w-full h-[120px] rounded-xl overflow-hidden mb-2 flex items-center justify-center"
+                            style={{
+                                background: form.banner ? 'transparent' : 'var(--bg2)',
+                                border: '1px solid var(--border)',
+                            }}
                         >
-                            Nombre
-                        </label>
+                            {form.banner
+                                ? <img
+                                    src={form.banner}
+                                    alt="Banner preview"
+                                    className="w-full h-full object-cover"
+                                    onError={e => { e.target.style.display = 'none' }}
+                                />
+                                : <span className="text-xs" style={{ color: 'var(--text2)' }}>
+                                    Vista previa del banner
+                                </span>
+                            }
+                        </div>
+                        <Field label="URL de portada (banner)">
+                            <input
+                                type="url"
+                                value={form.banner}
+                                onChange={e => setForm(f => ({ ...f, banner: e.target.value }))}
+                                placeholder="https://..."
+                                className="w-full bg-transparent pt-7 pb-2 px-3 text-base focus:outline-none"
+                                style={{ color: 'var(--text)' }}
+                            />
+                        </Field>
+                    </div>
+
+                    {/* Avatar preview + URL */}
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div
+                                className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'var(--bg2)', border: '2px solid var(--border)' }}
+                            >
+                                {form.avatar
+                                    ? <img
+                                        src={form.avatar}
+                                        alt="Avatar preview"
+                                        className="w-full h-full object-cover"
+                                        onError={e => { e.target.style.display = 'none' }}
+                                    />
+                                    : <span className="text-xs text-center" style={{ color: 'var(--text2)' }}>
+                                        Avatar
+                                    </span>
+                                }
+                            </div>
+                            <span className="text-xs" style={{ color: 'var(--text2)' }}>
+                                Vista previa del avatar
+                            </span>
+                        </div>
+                        <Field label="URL de foto de perfil (avatar)">
+                            <input
+                                type="url"
+                                value={form.avatar}
+                                onChange={e => setForm(f => ({ ...f, avatar: e.target.value }))}
+                                placeholder="https://..."
+                                className="w-full bg-transparent pt-7 pb-2 px-3 text-base focus:outline-none"
+                                style={{ color: 'var(--text)' }}
+                            />
+                        </Field>
+                    </div>
+
+                    {/* Name */}
+                    <Field label="Nombre">
                         <input
                             type="text"
                             value={form.name}
@@ -97,18 +178,10 @@ function EditModal({ profile, onClose, onSaved }) {
                             className="w-full bg-transparent pt-7 pb-2 px-3 text-base focus:outline-none"
                             style={{ color: 'var(--text)' }}
                         />
-                    </div>
+                    </Field>
 
-                    <div
-                        className="relative rounded-md"
-                        style={{ border: '1px solid var(--border)' }}
-                    >
-                        <label
-                            className="absolute left-3 top-2 text-xs"
-                            style={{ color: 'var(--text2)' }}
-                        >
-                            Bio
-                        </label>
+                    {/* Bio */}
+                    <Field label="Bio">
                         <textarea
                             value={form.bio}
                             onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
@@ -117,7 +190,7 @@ function EditModal({ profile, onClose, onSaved }) {
                             className="w-full bg-transparent pt-7 pb-2 px-3 text-base focus:outline-none resize-none"
                             style={{ color: 'var(--text)' }}
                         />
-                    </div>
+                    </Field>
                 </div>
             </div>
         </div>
@@ -135,15 +208,18 @@ export default function Profile() {
     const [followersCount, setFollowersCount] = useState(0)
     const [activeTab, setActiveTab] = useState('posts')
     const [editOpen, setEditOpen] = useState(false)
+    const [banner, setBanner] = useState('')
 
     useEffect(() => {
         setLoading(true)
         setActiveTab('posts')
         getProfile(username)
             .then(res => {
-                setProfile(res.data.user)
-                setFollowing(res.data.user.isFollowing)
-                setFollowersCount(res.data.user.followersCount)
+                const u = res.data.user
+                setProfile(u)
+                setFollowing(u.isFollowing)
+                setFollowersCount(u.followersCount)
+                setBanner(localStorage.getItem(`banner_${u.id}`) || '')
             })
             .catch(console.error)
             .finally(() => setLoading(false))
@@ -168,6 +244,17 @@ export default function Profile() {
             data: {
                 ...res.data,
                 tweets: (res.data.tweets || []).filter(t => t.parentId !== null),
+            },
+        }
+    }, [username])
+
+    const fetchLikes = useCallback(async () => {
+        const res = await getUserLikes(username)
+        return {
+            data: {
+                tweets: res.data.tweets || [],
+                nextCursor: null,
+                hasMore: false,
             },
         }
     }, [username])
@@ -235,6 +322,7 @@ export default function Profile() {
                     onClose={() => setEditOpen(false)}
                     onSaved={(updated) => {
                         setProfile(p => ({ ...p, ...updated }))
+                        setBanner(updated.banner || '')
                         setEditOpen(false)
                     }}
                 />
@@ -243,7 +331,13 @@ export default function Profile() {
             <StickyHeader />
 
             {/* Banner */}
-            <div className="h-[130px] sm:h-[200px]" style={{ background: 'var(--bg2)' }} />
+            <div
+                className="h-[130px] sm:h-[200px] overflow-hidden"
+                style={banner
+                    ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                    : { background: 'var(--bg2)' }
+                }
+            />
 
             {/* Profile info */}
             <div className="px-4 pb-4">
@@ -359,16 +453,7 @@ export default function Profile() {
 
             {activeTab === 'replies' && <TweetList fetchFn={fetchReplies} />}
 
-            {activeTab === 'likes' && (
-                <div className="p-12 text-center">
-                    <p className="font-extrabold text-[20px]" style={{ color: 'var(--text)' }}>
-                        Próximamente
-                    </p>
-                    <p className="text-sm mt-2" style={{ color: 'var(--text2)' }}>
-                        Los tweets que le gustan a @{username} aparecerán aquí.
-                    </p>
-                </div>
-            )}
+            {activeTab === 'likes' && <TweetList fetchFn={fetchLikes} />}
 
             <div className="h-20 md:hidden" />
         </div>

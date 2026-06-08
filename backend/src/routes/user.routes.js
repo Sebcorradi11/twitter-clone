@@ -1,4 +1,4 @@
-import { getProfile, getTweets } from '../controllers/user.controller.js'
+import { getProfile, getTweets, getLikes } from '../controllers/user.controller.js'
 import { authenticate } from '../middleware/auth.middleware.js'
 
 export async function userRoutes(app) {
@@ -6,4 +6,5 @@ export async function userRoutes(app) {
 
     app.get('/:username', getProfile)
     app.get('/:username/tweets', getTweets)
+    app.get('/:username/likes', getLikes)
 }

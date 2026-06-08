@@ -22,6 +22,13 @@ export async function findUserByUsername(username) {
     })
 }
 
+export async function checkIsFollowing(followerId, followingId) {
+    const follow = await prisma.follow.findUnique({
+        where: { followerId_followingId: { followerId, followingId } },
+    })
+    return !!follow
+}
+
 export async function getUserTweets({ userId, cursor, limit = 20 }) {
     const tweets = await prisma.tweet.findMany({
         where: {
@@ -57,4 +64,29 @@ export async function getUserTweets({ userId, cursor, limit = 20 }) {
         nextCursor: hasMore ? data[data.length - 1].id : null,
         hasMore,
     }
+}
+
+export async function getUserLikes({ username, currentUserId }) {
+    const user = await prisma.user.findUnique({
+        where: { username: username.toLowerCase() },
+    })
+    if (!user) return null
+
+    const likes = await prisma.like.findMany({
+        where: { userId: user.id },
+        include: {
+            tweet: {
+                include: {
+                    author: {
+                        select: { id: true, username: true, name: true, bio: true, avatar: true },
+                    },
+                    likes: { where: { userId: currentUserId || user.id }, select: { userId: true } },
+                    _count: { select: { likes: true, replies: true } },
+                },
+            },
+        },
+        orderBy: { createdAt: 'desc' },
+    })
+
+    return likes.map(l => l.tweet)
 }
