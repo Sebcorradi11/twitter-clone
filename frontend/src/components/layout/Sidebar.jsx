@@ -205,7 +205,13 @@ export default function Sidebar() {
                                 onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                                 onMouseLeave={e => e.currentTarget.style.background = ''}
                             >
-                                <Avatar src={user.avatar} username={user.username} size="sm" />
+                                <Link
+                                    to={`/${user.username}`}
+                                    onClick={e => e.stopPropagation()}
+                                    className="shrink-0"
+                                >
+                                    <Avatar src={user.avatar} username={user.username} size="sm" />
+                                </Link>
                                 <div className="hidden xl:flex flex-col flex-1 min-w-0 text-left">
                                     <span className="font-bold text-sm truncate" style={{ color: 'var(--text)' }}>
                                         {user.name}

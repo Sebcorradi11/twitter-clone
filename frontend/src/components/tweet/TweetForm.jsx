@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { createTweet } from '../../services/api'
 import Avatar from '../ui/Avatar'
@@ -40,7 +41,9 @@ export default function TweetForm({ onTweetCreated, parentId = null, placeholder
             className="flex gap-3 px-4 py-3"
             style={{ borderBottom: '1px solid var(--border)' }}
         >
-            <Avatar src={user?.avatar} username={user?.username} />
+            <Link to={`/${user?.username}`} className="shrink-0">
+                <Avatar src={user?.avatar} username={user?.username} />
+            </Link>
 
             <div className="flex-1 flex flex-col gap-3 min-w-0">
                 <textarea
