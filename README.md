@@ -7,7 +7,7 @@ Clon funcional de Twitter/X desarrollado como challenge técnico full-stack.
 - **Backend:** Node.js + Fastify + PostgreSQL + Prisma
 - **Frontend:** React + Vite + Tailwind CSS
 - **Auth:** JWT propio
-- **Testing:** Jest (84% cobertura)
+- **Testing:** Jest (87.64% cobertura)
 
 ## Prerrequisitos
 
