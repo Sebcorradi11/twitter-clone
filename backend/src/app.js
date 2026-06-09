@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
+import multipart from '@fastify/multipart'
 import { authRoutes } from './routes/auth.routes.js'
 import { tweetRoutes } from './routes/tweet.routes.js'
 import { likeRoutes } from './routes/like.routes.js'
@@ -8,6 +9,7 @@ import { followRoutes } from './routes/follow.routes.js'
 import { searchRoutes } from './routes/search.routes.js'
 import { userRoutes } from './routes/user.routes.js'
 import { notificationRoutes } from './routes/notification.routes.js'
+import { uploadRoutes } from './routes/upload.routes.js'
 
 export async function buildApp(opts = {}) {
   const app = Fastify({
@@ -23,6 +25,10 @@ export async function buildApp(opts = {}) {
     secret: process.env.JWT_SECRET || 'dev-secret',
   })
 
+  await app.register(multipart, {
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  })
+
   await app.register(
     async (api) => {
       api.register(authRoutes, { prefix: '/auth' })
@@ -32,6 +38,7 @@ export async function buildApp(opts = {}) {
       api.register(searchRoutes, { prefix: '/search' })
       api.register(userRoutes, { prefix: '/users' })
       api.register(notificationRoutes, { prefix: '/notifications' })
+      api.register(uploadRoutes, { prefix: '/upload' })
     },
     { prefix: '/api' }
   )

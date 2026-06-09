@@ -7,6 +7,7 @@ Clon funcional de Twitter/X desarrollado como challenge técnico full-stack.
 - **Backend:** Node.js + Fastify + PostgreSQL + Prisma
 - **Frontend:** React + Vite + Tailwind CSS
 - **Auth:** JWT propio
+- **Storage:** Cloudinary (imágenes de perfil y portada)
 - **Testing:** Jest (87.64% cobertura)
 
 ## Prerrequisitos
@@ -141,6 +142,21 @@ twitter-clone/
 │       ├── services/      # Llamadas a API
 │       └── hooks/         # Custom hooks
 └── README.md
+
+
+## Variables de entorno
+
+```
+DATABASE_URL="postgresql://postgres:TU_PASSWORD@localhost:5432/twitter_clone"
+DATABASE_URL_TEST="postgresql://postgres:TU_PASSWORD@localhost:5432/twitter_clone_test"
+JWT_SECRET="un-secret-seguro-de-al-menos-32-caracteres"
+PORT=3001
+FRONTEND_URL="http://localhost:5173"
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME="tu-cloud-name"
+CLOUDINARY_API_KEY="tu-api-key"
+CLOUDINARY_API_SECRET="tu-api-secret"
 
 ## Decisiones técnicas
 

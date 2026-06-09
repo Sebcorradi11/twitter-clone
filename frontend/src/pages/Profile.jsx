@@ -27,6 +27,13 @@ const CloseIcon = () => (
     </svg>
 )
 
+const CameraIcon = () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white drop-shadow">
+        <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/>
+        <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+    </svg>
+)
+
 /* ── Edit Modal ── */
 function EditModal({ profile, onClose, onSaved }) {
     const [form, setForm] = useState({
@@ -38,6 +45,32 @@ function EditModal({ profile, onClose, onSaved }) {
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState(null)
     const [visible, setVisible] = useState(false)
+    const bannerInputRef = useRef(null)
+    const avatarInputRef = useRef(null)
+    const [uploading, setUploading] = useState({ banner: false, avatar: false })
+
+    const handleFileSelect = (field) => async (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        e.target.value = ''
+        setUploading(u => ({ ...u, [field]: true }))
+        try {
+            const body = new FormData()
+            body.append('file', file)
+            const res = await fetch('http://localhost:3001/api/upload', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                body,
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Error al subir')
+            setForm(f => ({ ...f, [field]: data.url }))
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setUploading(u => ({ ...u, [field]: false }))
+        }
+    }
 
     useEffect(() => {
         requestAnimationFrame(() => setVisible(true))
@@ -133,27 +166,41 @@ function EditModal({ profile, onClose, onSaved }) {
 
                     {/* Banner */}
                     <div>
+                        <input
+                            ref={bannerInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileSelect('banner')}
+                        />
                         <div
-                            className="w-full h-[110px] rounded-xl overflow-hidden mb-3 flex items-center justify-center"
+                            className="group relative w-full h-[110px] rounded-xl overflow-hidden mb-3 flex items-center justify-center cursor-pointer"
                             style={{
                                 background: form.banner
                                     ? `url(${form.banner}) center/cover no-repeat`
                                     : 'linear-gradient(135deg, #667eea40, #764ba240)',
                                 border: '1px solid var(--border)',
                             }}
+                            onClick={() => bannerInputRef.current?.click()}
                         >
                             {!form.banner && (
                                 <span className="text-xs" style={{ color: 'var(--text2)' }}>
                                     Vista previa del banner
                                 </span>
                             )}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-150">
+                                {uploading.banner
+                                    ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    : <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150"><CameraIcon /></span>
+                                }
+                            </div>
                         </div>
                         <Field label="URL de banner">
                             <input
                                 type="url"
                                 value={form.banner}
                                 onChange={e => setForm(f => ({ ...f, banner: e.target.value }))}
-                                placeholder="https://..."
+                                placeholder="https://... o subí una imagen arriba"
                                 className="w-full bg-transparent text-[15px] focus:outline-none"
                                 style={{ color: 'var(--text)' }}
                             />
@@ -162,22 +209,36 @@ function EditModal({ profile, onClose, onSaved }) {
 
                     {/* Avatar */}
                     <div>
+                        <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileSelect('avatar')}
+                        />
                         <div className="flex items-center gap-4 mb-3">
                             <div
-                                className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 transition-transform duration-200"
+                                className="group relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 cursor-pointer"
                                 style={{
                                     border: '3px solid var(--bg)',
                                     boxShadow: '0 0 0 2px var(--border)',
                                 }}
+                                onClick={() => avatarInputRef.current?.click()}
                             >
                                 {form.avatar
                                     ? <img src={form.avatar} alt="" className="w-full h-full object-cover"
                                         onError={e => { e.target.style.display = 'none' }} />
                                     : <div className="w-full h-full" style={{ background: 'var(--bg2)' }} />
                                 }
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 rounded-full transition-all duration-150">
+                                    {uploading.avatar
+                                        ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        : <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150"><CameraIcon /></span>
+                                    }
+                                </div>
                             </div>
                             <span className="text-[13px]" style={{ color: 'var(--text2)' }}>
-                                Vista previa del avatar
+                                Hacé click para subir una foto
                             </span>
                         </div>
                         <Field label="URL de foto de perfil">
@@ -185,7 +246,7 @@ function EditModal({ profile, onClose, onSaved }) {
                                 type="url"
                                 value={form.avatar}
                                 onChange={e => setForm(f => ({ ...f, avatar: e.target.value }))}
-                                placeholder="https://..."
+                                placeholder="https://... o subí una imagen arriba"
                                 className="w-full bg-transparent text-[15px] focus:outline-none"
                                 style={{ color: 'var(--text)' }}
                             />
