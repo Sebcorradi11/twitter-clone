@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../../context/ThemeContext'
+import { getUnreadCount } from '../../services/api'
 import Avatar from '../ui/Avatar'
 
 /* ── Icons ── */
@@ -81,7 +82,7 @@ const ComposeIcon = () => (
 )
 
 /* ── Nav item ── */
-function NavItem({ path, label, Icon, active }) {
+function NavItem({ path, label, Icon, active, badge }) {
     return (
         <Link
             to={path}
@@ -90,7 +91,14 @@ function NavItem({ path, label, Icon, active }) {
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
             onMouseLeave={e => e.currentTarget.style.background = ''}
         >
-            <Icon active={active} />
+            <div className="relative">
+                <Icon active={active} />
+                {badge > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#1d9bf0] text-white text-[11px] font-bold rounded-full flex items-center justify-center px-1">
+                        {badge > 99 ? '99+' : badge}
+                    </span>
+                )}
+            </div>
             <span className="hidden xl:block text-[19px] leading-none" style={{ color: 'var(--text)' }}>
                 {label}
             </span>
@@ -104,6 +112,7 @@ export default function Sidebar() {
     const navigate = useNavigate()
     const location = useLocation()
     const [showLogout, setShowLogout] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
     const logoutRef = useRef(null)
 
     const isActive = (path) =>
@@ -120,19 +129,35 @@ export default function Sidebar() {
         return () => document.removeEventListener('mousedown', handler)
     }, [showLogout])
 
+    useEffect(() => {
+        const fetchCount = () => {
+            getUnreadCount()
+                .then(res => setUnreadCount(res.data.count))
+                .catch(() => {})
+        }
+        fetchCount()
+        const id = setInterval(fetchCount, 30000)
+        return () => clearInterval(id)
+    }, [])
+
+    useEffect(() => {
+        if (location.pathname === '/notifications') setUnreadCount(0)
+    }, [location.pathname])
+
     const navItems = [
-        { label: 'Inicio',    path: '/',                  Icon: HomeIcon    },
-        { label: 'Explorar',  path: '/search',            Icon: SearchIcon  },
-        { label: 'Perfil',    path: `/${user?.username}`, Icon: ProfileIcon },
+        { label: 'Inicio',         path: '/',                  Icon: HomeIcon    },
+        { label: 'Explorar',       path: '/search',            Icon: SearchIcon  },
+        { label: 'Notificaciones', path: '/notifications',     Icon: BellIcon,   badge: unreadCount },
+        { label: 'Perfil',         path: `/${user?.username}`, Icon: ProfileIcon },
     ]
 
     return (
         <>
             {/* ── Desktop sidebar ── */}
-            <aside className="hidden md:flex flex-col sticky top-0 h-screen xl:w-[275px] md:w-[88px] px-2 xl:px-3 py-2 justify-between flex-shrink-0">
+            <aside className="hidden md:flex flex-col sticky top-0 h-screen xl:w-[275px] md:w-[88px] px-2 xl:px-3 py-2 flex-shrink-0">
 
+                {/* Top nav */}
                 <div className="flex flex-col items-start gap-1">
-                    {/* Logo */}
                     <Link
                         to="/"
                         className="p-3 rounded-full transition-colors"
@@ -142,7 +167,6 @@ export default function Sidebar() {
                         <XLogo />
                     </Link>
 
-                    {/* Nav items */}
                     {navItems.map(item => (
                         <NavItem
                             key={item.label}
@@ -151,7 +175,6 @@ export default function Sidebar() {
                         />
                     ))}
 
-                    {/* Publicar button */}
                     <button
                         onClick={() => navigate('/')}
                         className="mt-2 rounded-full font-bold transition-opacity hover:opacity-90 xl:w-full xl:py-3.5 xl:text-[17px] xl:px-6 p-3.5 flex items-center justify-center"
@@ -162,11 +185,11 @@ export default function Sidebar() {
                     </button>
                 </div>
 
-                <div className="flex flex-col gap-1 pb-3">
-                    {/* Theme toggle */}
+                {/* Bottom controls */}
+                <div className="mt-auto flex flex-col gap-1 pb-3">
                     <button
                         onClick={toggle}
-                        className="flex items-center gap-4 px-3 py-3 rounded-full transition-colors text-left"
+                        className="flex items-center gap-4 px-3 py-2.5 rounded-full transition-colors text-left"
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                         onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
@@ -176,7 +199,6 @@ export default function Sidebar() {
                         </span>
                     </button>
 
-                    {/* User + logout popup */}
                     {user && (
                         <div className="relative" ref={logoutRef}>
                             {showLogout && (
@@ -201,7 +223,7 @@ export default function Sidebar() {
                             )}
                             <button
                                 onClick={() => setShowLogout(p => !p)}
-                                className="w-full flex items-center gap-3 px-3 py-3 rounded-full transition-colors"
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors"
                                 onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                                 onMouseLeave={e => e.currentTarget.style.background = ''}
                             >

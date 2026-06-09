@@ -158,7 +158,7 @@ export default function RightPanel() {
                             <div style={{ height: '1px', background: 'var(--border)', margin: '0 16px' }} />
                             <button
                                 onClick={() => setExpanded(p => !p)}
-                                className="w-full text-left px-4 py-3 text-[#1d9bf0] text-sm font-medium transition-colors"
+                                className="w-full text-center py-3 text-[#1d9bf0] text-sm font-medium transition-colors"
                                 onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                                 onMouseLeave={e => e.currentTarget.style.background = ''}
                             >

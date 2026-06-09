@@ -19,6 +19,12 @@ export const login = (data) => api.post('/auth/login', data)
 export const getMe = () => api.get('/auth/me')
 export const updateProfile = (data) => api.put('/auth/profile', data)
 
+
+// Notifications
+export const getNotifications = (cursor) => api.get('/notifications', { params: { cursor } })
+export const getUnreadCount = () => api.get('/notifications/unread-count')
+export const markAllAsRead = () => api.put('/notifications/read-all')
+
 // Tweets
 export const createTweet = (data) => api.post('/tweets', data)
 export const getTweet = (id) => api.get(`/tweets/${id}`)

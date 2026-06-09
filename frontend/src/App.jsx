@@ -9,6 +9,7 @@ import Register from './pages/Register'
 import Profile from './pages/Profile'
 import TweetDetail from './pages/TweetDetail'
 import Search from './pages/Search'
+import Notifications from './pages/Notifications'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/search" element={<Search />} />
+                <Route path="/notifications" element={<Notifications />} />
                 <Route path="/tweet/:id" element={<TweetDetail />} />
                 <Route path="/:username" element={<Profile />} />
               </Route>
