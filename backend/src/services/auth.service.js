@@ -1,10 +1,16 @@
+import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 import 'dotenv/config'
 import bcrypt from 'bcryptjs'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client'
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
+function getPrisma() {
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+  const adapter = new PrismaPg(pool)
+  return new PrismaClient({ adapter })
+}
+
+const prisma = getPrisma()
 
 export async function createUser({ email, username, name, password }) {
   const hashedPassword = await bcrypt.hash(password, 10)

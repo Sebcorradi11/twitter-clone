@@ -3,9 +3,13 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
 import 'dotenv/config'
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
+function getPrisma() {
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+  const adapter = new PrismaPg(pool)
+  return new PrismaClient({ adapter })
+}
+
+const prisma = getPrisma()
 
 export async function getNotifications({ userId, cursor, limit = 20 }) {
   const notifications = await prisma.notification.findMany({
@@ -50,7 +54,6 @@ export async function markAllAsRead(userId) {
 
 export async function createNotification({ type, recipientId, actorId, tweetId = null }) {
   if (recipientId === actorId) return null
-
   return prisma.notification.create({
     data: { type, recipientId, actorId, tweetId },
   }).catch(() => null)

@@ -14,10 +14,10 @@ export async function createTestApp() {
 }
 
 export async function createTestUser(overrides = {}) {
-  const timestamp = Date.now().toString().slice(-8)
+  const timestamp = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`
   const defaults = {
     email: `test${timestamp}@example.com`,
-    username: `user${timestamp}`,
+    username: `user${timestamp.slice(-12)}`,
     name: 'Test User',
     password: await bcrypt.hash('password123', 10),
     avatar: null,
