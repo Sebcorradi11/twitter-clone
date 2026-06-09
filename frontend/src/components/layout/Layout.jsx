@@ -15,7 +15,7 @@ export default function Layout() {
                     <Outlet />
                 </main>
 
-                <div className="hidden xl:flex w-[350px] flex-shrink-0 px-4 py-2">
+                <div className="hidden lg:flex w-[350px] flex-shrink-0 px-4 py-2">
                     <RightPanel />
                 </div>
             </div>
