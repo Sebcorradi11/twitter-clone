@@ -8,9 +8,9 @@ import { followRoutes } from './routes/follow.routes.js'
 import { searchRoutes } from './routes/search.routes.js'
 import { userRoutes } from './routes/user.routes.js'
 
-export async function buildApp() {
+export async function buildApp(opts = {}) {
   const app = Fastify({
-    logger: true,
+    logger: opts.logger ?? true,
   })
 
   await app.register(cors, {
@@ -39,5 +39,8 @@ export async function buildApp() {
   return app
 }
 
-const app = await buildApp()
-await app.listen({ port: process.env.PORT || 3001, host: '0.0.0.0' })
+// Solo arranca el servidor si se ejecuta directamente
+if (process.argv[1].includes('app.js')) {
+  const app = await buildApp()
+  await app.listen({ port: process.env.PORT || 3001, host: '0.0.0.0' })
+}
