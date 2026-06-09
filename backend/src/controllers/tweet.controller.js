@@ -1,4 +1,4 @@
-import { createTweet, deleteTweet, findTweetById, getTimeline } from '../services/tweet.service.js'
+import { createTweet, deleteTweet, findTweetById, getTimeline, getFollowingTimeline } from '../services/tweet.service.js'
 
 export async function create(request, reply) {
     const { content, parentId, imageUrl } = request.body
@@ -55,6 +55,18 @@ export async function timeline(request, reply) {
     const { cursor, limit } = request.query
 
     const result = await getTimeline({
+        userId: request.user.userId,
+        cursor: cursor || null,
+        limit: limit ? parseInt(limit) : 20,
+    })
+
+    return reply.send(result)
+}
+
+export async function followingTimeline(request, reply) {
+    const { cursor, limit } = request.query
+
+    const result = await getFollowingTimeline({
         userId: request.user.userId,
         cursor: cursor || null,
         limit: limit ? parseInt(limit) : 20,

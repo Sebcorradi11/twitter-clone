@@ -25,6 +25,7 @@ export const getTweet = (id) => api.get(`/tweets/${id}`)
 export const deleteTweet = (id) => api.delete(`/tweets/${id}`)
 export const likeTweet = (id) => api.post(`/tweets/${id}/like`)
 export const getTimeline = (cursor) => api.get('/tweets', { params: { cursor } })
+export const getFollowingTimeline = (cursor) => api.get('/tweets/following', { params: { cursor } })
 
 // Users
 export const getProfile = (username) => api.get(`/users/${username}`)
