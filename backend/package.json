@@ -5,7 +5,26 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch src/app.js",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "db:seed": "node prisma/seed.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/unit --coverage",
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/integration --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "setupFiles": [
+      "./tests/setup.js"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 80
+      }
+    }
   },
   "keywords": [],
   "author": "",
@@ -14,16 +33,21 @@
   "dependencies": {
     "@fastify/cors": "^11.2.0",
     "@fastify/jwt": "^10.1.0",
+    "@fastify/multipart": "^10.0.0",
     "@fastify/rate-limit": "^10.3.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
     "fastify": "^5.8.5",
+    "pg": "^8.21.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/node": "^22.15.29",
     "jest": "^30.4.2",
-    "prisma": "^7.8.0"
+    "prisma": "^7.8.0",
+    "supertest": "^7.2.2"
   }
 }
