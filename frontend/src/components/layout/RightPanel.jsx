@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { searchUsers, followUser } from '../../services/api'
 import Avatar from '../ui/Avatar'
 
@@ -9,15 +10,62 @@ const SearchIcon = () => (
     </svg>
 )
 
+const INITIAL_COUNT = 3
+const EXPANDED_COUNT = 6
+
+function FollowButton({ userId, isFollowing: initialFollowing, followingIds, onToggle }) {
+    const following = followingIds.has(userId)
+
+    return (
+        <button
+            onClick={e => onToggle(e, userId)}
+            className="px-4 py-1.5 rounded-full font-bold text-sm flex-shrink-0 transition-all"
+            style={following
+                ? {
+                    border: '1px solid var(--border)',
+                    color: 'var(--text2)',
+                    background: 'transparent',
+                }
+                : {
+                    border: '1px solid var(--text)',
+                    color: 'var(--text)',
+                    background: 'transparent',
+                }
+            }
+            onMouseEnter={e => {
+                if (following) {
+                    e.currentTarget.style.borderColor = '#f4212e'
+                    e.currentTarget.style.color = '#f4212e'
+                } else {
+                    e.currentTarget.style.background = 'var(--text)'
+                    e.currentTarget.style.color = 'var(--bg)'
+                }
+            }}
+            onMouseLeave={e => {
+                if (following) {
+                    e.currentTarget.style.borderColor = 'var(--border)'
+                    e.currentTarget.style.color = 'var(--text2)'
+                } else {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = 'var(--text)'
+                }
+            }}
+        >
+            {following ? 'Siguiendo' : 'Seguir'}
+        </button>
+    )
+}
+
 export default function RightPanel() {
     const [query, setQuery] = useState('')
-    const [suggestions, setSuggestions] = useState([])
+    const [allSuggestions, setAllSuggestions] = useState([])
     const [followingIds, setFollowingIds] = useState(new Set())
+    const [expanded, setExpanded] = useState(false)
     const navigate = useNavigate()
 
     useEffect(() => {
         searchUsers('a')
-            .then(res => setSuggestions((res.data.users || []).slice(0, 3)))
+            .then(res => setAllSuggestions(res.data.users || []))
             .catch(() => {})
     }, [])
 
@@ -40,8 +88,14 @@ export default function RightPanel() {
         } catch (err) { console.error(err) }
     }
 
+    const visibleSuggestions = expanded
+        ? allSuggestions.slice(0, EXPANDED_COUNT)
+        : allSuggestions.slice(0, INITIAL_COUNT)
+
+    const canExpand = allSuggestions.length > INITIAL_COUNT
+
     return (
-        <div className="pt-3 flex flex-col gap-4 sticky top-0 min-h-screen">
+        <div className="pt-3 flex flex-col gap-4 sticky top-0 min-h-screen w-full">
             {/* Search box */}
             <form onSubmit={handleSearch} className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -52,13 +106,13 @@ export default function RightPanel() {
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Buscar en X"
-                    className="w-full rounded-full px-5 py-3 pl-12 text-sm focus:outline-none focus:ring-1 focus:ring-[#1d9bf0] transition-all"
+                    className="w-full rounded-full px-5 py-3 pl-12 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d9bf0] transition-all"
                     style={{ background: 'var(--bg2)', color: 'var(--text)' }}
                 />
             </form>
 
             {/* Who to follow */}
-            {suggestions.length > 0 && (
+            {visibleSuggestions.length > 0 && (
                 <div
                     className="rounded-2xl overflow-hidden"
                     style={{ background: 'var(--bg2)' }}
@@ -70,66 +124,58 @@ export default function RightPanel() {
                         A quién seguir
                     </h2>
 
-                    {suggestions.map(u => (
-                        <Link
-                            key={u.id}
-                            to={`/${u.username}`}
-                            className="flex items-center gap-3 px-4 py-3 transition-colors"
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                            onMouseLeave={e => e.currentTarget.style.background = ''}
-                        >
-                            <Avatar src={u.avatar} username={u.username} size="sm" />
-                            <div className="flex-1 min-w-0">
-                                <p className="font-bold text-sm truncate" style={{ color: 'var(--text)' }}>
-                                    {u.name}
-                                </p>
-                                <p className="text-sm truncate" style={{ color: 'var(--text2)' }}>
-                                    @{u.username}
-                                </p>
-                            </div>
-                            <button
-                                onClick={e => handleFollow(e, u.id)}
-                                className="px-4 py-1.5 rounded-full font-bold text-sm flex-shrink-0 transition-all"
-                                style={followingIds.has(u.id)
-                                    ? { border: '1px solid var(--border)', color: 'var(--text)', background: 'transparent' }
-                                    : { background: 'var(--text)', color: 'var(--bg)' }
-                                }
-                                onMouseEnter={e => {
-                                    if (followingIds.has(u.id)) {
-                                        e.currentTarget.style.borderColor = '#f4212e'
-                                        e.currentTarget.style.color = '#f4212e'
-                                    } else {
-                                        e.currentTarget.style.opacity = '0.8'
-                                    }
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.opacity = '1'
-                                    if (followingIds.has(u.id)) {
-                                        e.currentTarget.style.borderColor = 'var(--border)'
-                                        e.currentTarget.style.color = 'var(--text)'
-                                    }
-                                }}
+                    {visibleSuggestions.map((u, idx) => (
+                        <div key={u.id}>
+                            {idx > 0 && (
+                                <div style={{ height: '1px', background: 'var(--border)', margin: '0 16px' }} />
+                            )}
+                            <Link
+                                to={`/${u.username}`}
+                                className="flex items-center gap-3 px-4 py-3 transition-colors"
+                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                                onMouseLeave={e => e.currentTarget.style.background = ''}
                             >
-                                {followingIds.has(u.id) ? 'Siguiendo' : 'Seguir'}
-                            </button>
-                        </Link>
+                                <Avatar src={u.avatar} username={u.username} size="sm" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-sm truncate" style={{ color: 'var(--text)' }}>
+                                        {u.name}
+                                    </p>
+                                    <p className="text-sm truncate" style={{ color: 'var(--text2)' }}>
+                                        @{u.username}
+                                    </p>
+                                </div>
+                                <FollowButton
+                                    userId={u.id}
+                                    followingIds={followingIds}
+                                    onToggle={handleFollow}
+                                />
+                            </Link>
+                        </div>
                     ))}
 
-                    <Link
-                        to="/search"
-                        className="block px-4 py-4 text-[#1d9bf0] text-sm transition-colors"
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                        onMouseLeave={e => e.currentTarget.style.background = ''}
-                    >
-                        Ver más
-                    </Link>
+                    {canExpand && (
+                        <>
+                            <div style={{ height: '1px', background: 'var(--border)', margin: '0 16px' }} />
+                            <button
+                                onClick={() => setExpanded(p => !p)}
+                                className="w-full text-left px-4 py-4 text-[#1d9bf0] text-sm font-medium transition-colors"
+                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                                onMouseLeave={e => e.currentTarget.style.background = ''}
+                            >
+                                {expanded ? 'Ver menos' : 'Ver más'}
+                            </button>
+                        </>
+                    )}
                 </div>
             )}
 
             {/* Project info card */}
             <div
                 className="rounded-2xl px-4 py-4"
-                style={{ background: 'var(--bg2)' }}
+                style={{
+                    background: 'var(--bg2)',
+                    border: '1px solid var(--border)',
+                }}
             >
                 <div className="flex items-center gap-2 mb-2">
                     <span
