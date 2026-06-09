@@ -85,7 +85,7 @@ function NavItem({ path, label, Icon, active }) {
     return (
         <Link
             to={path}
-            className="flex items-center gap-4 px-3 py-3 rounded-full transition-colors"
+            className="flex items-center gap-4 px-3 py-2.5 rounded-full transition-colors"
             style={{ fontWeight: active ? 800 : 400 }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
             onMouseLeave={e => e.currentTarget.style.background = ''}
@@ -135,7 +135,7 @@ export default function Sidebar() {
                     {/* Logo */}
                     <Link
                         to="/"
-                        className="p-3 rounded-full transition-colors mb-1"
+                        className="p-3 rounded-full transition-colors"
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                         onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
@@ -154,7 +154,7 @@ export default function Sidebar() {
                     {/* Publicar button */}
                     <button
                         onClick={() => navigate('/')}
-                        className="mt-4 rounded-full font-bold transition-opacity hover:opacity-90 xl:w-full xl:py-3.5 xl:text-[17px] xl:px-6 p-3.5 flex items-center justify-center"
+                        className="mt-2 rounded-full font-bold transition-opacity hover:opacity-90 xl:w-full xl:py-3.5 xl:text-[17px] xl:px-6 p-3.5 flex items-center justify-center"
                         style={{ background: 'var(--btn-bg)', color: 'var(--btn-text)' }}
                     >
                         <span className="hidden xl:block">Publicar</span>
